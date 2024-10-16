@@ -1,5 +1,7 @@
 import "./style.css";
 
+
+//INTERFACES=========================================================================================
 interface Pixel {
     x: number;
     y: number;
@@ -9,11 +11,15 @@ interface Drawable {
     display(context: CanvasRenderingContext2D): void;
 }
 
+
+//LINE CLASS=========================================================================================
 class Line implements Drawable {
     private pixels: Pixel[];
+    private type: boolean;//0 is thin, 1 is thick
 
-    constructor() {
+    constructor(type: boolean) {
         this.pixels = [];
+        this.type = type;
     }
 
     addPixel(pixel: Pixel) {
@@ -21,12 +27,11 @@ class Line implements Drawable {
     }
 
     display(context: CanvasRenderingContext2D): void {
-        //canvas.dispatchEvent(clear_event);
-        //for(const pixel of this.pixels){
             if(this.pixels.length > 1) {
                 const x = this.pixels[0].x;
                 const y = this.pixels[0].y;
-
+                if(this.type) context.lineWidth = 10;
+                else context.lineWidth = 1;
                 context?.beginPath();
                 context?.moveTo(x, y);
                 for(const {x, y} of this.pixels) {
@@ -34,42 +39,44 @@ class Line implements Drawable {
                 }
                 context?.stroke();
             }
-        //}
     }
 
 }
-//INNER HTML SETUP
-const APP_NAME = "Drawing Game!";
 
+
+//INNER HTML SETUP===================================================================================
+const APP_NAME = "Drawing Game!";
 const header = document.createElement("h1");
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-
 //any[][] from GPT https://chatgpt.com/share/670f30d4-c6fc-8007-829e-26766989f016
 const lines: Drawable[] = [];
 const redos: Drawable[] = [];
+let current_line_type: boolean = false;//thin
 let current_line: Line;
 canvas.height = 256;
 canvas.width = 256;
 const pencil = canvas.getContext("2d");
+//initial clear
 if(pencil) pencil.fillStyle = "white";
 pencil?.fillRect(0, 0, 256, 256);
 if(pencil) pencil.fillStyle = "black";
 document.title = APP_NAME;
 header.innerHTML = APP_NAME;
 canvas.parentNode?.insertBefore(header, canvas);
-
 const draw_event = new Event("draw");
 const clear_event = new Event("clear");
 
+
+//EVENT DEFINITIONS==================================================================================
+
 //from the glitch example https://quant-paint.glitch.me/paint0.html {
 const cursor = {active: false, x: 0, y: 0};
-
 canvas.addEventListener("mousedown", (event) => {
     cursor.active = true;
     cursor.x = event.offsetX;
     cursor.y = event.offsetY;
 
-    current_line = new Line();
+    current_line = new Line(current_line_type);
     lines.push(current_line);
     redos.splice(0, redos.length);
     const p: Pixel = {x: cursor.x, y: cursor.y};
@@ -90,11 +97,9 @@ canvas.addEventListener("mousemove", (event) => {
 
 canvas.addEventListener("mouseup", () => {
     cursor.active = false;
-    current_line = new Line();
+    current_line = new Line(current_line_type);
     canvas.dispatchEvent(draw_event);
-  });
-
-//}
+});
 
 
 //draw event, adapted from glitch paint1
@@ -121,13 +126,15 @@ canvas.addEventListener(
 );
 
 
+
+//BUTTONS============================================================================================
 //clear button
 const clear_button = document.createElement("button");
 clear_button.innerHTML = "clear";
 document.body.append(clear_button);
 clear_button.addEventListener("click", () => {
     canvas.dispatchEvent(clear_event);
-    current_line = new Line();
+    current_line = new Line(current_line_type);
     lines.splice(0, lines.length);
     redos.splice(0, redos.length);
 });
@@ -156,5 +163,22 @@ redo_button.addEventListener("click", () => {
         redos.pop();
         canvas.dispatchEvent(draw_event);
     }
+});
+
+
+//Thick button
+const thick_button = document.createElement("button");
+thick_button.innerHTML = "thick";
+document.body.append(thick_button);
+thick_button.addEventListener("click", () => {
+    current_line_type = true;
+});
+
+//thin button
+const thin_button = document.createElement("button");
+thin_button.innerHTML = "thin";
+document.body.append(thin_button);
+thin_button.addEventListener("click", () => {
+    current_line_type = false;
 });
 
