@@ -1,6 +1,43 @@
 import "./style.css";
 
+interface Pixel {
+    x: number;
+    y: number;
+  }
 
+interface Drawable {
+    display(context: CanvasRenderingContext2D): void;
+}
+
+class Line implements Drawable {
+    private pixels: Pixel[];
+
+    constructor() {
+        this.pixels = [];
+    }
+
+    addPixel(pixel: Pixel) {
+        this.pixels.push(pixel);
+    }
+
+    display(context: CanvasRenderingContext2D): void {
+        //canvas.dispatchEvent(clear_event);
+        //for(const pixel of this.pixels){
+            if(this.pixels.length > 1) {
+                const x = this.pixels[0].x;
+                const y = this.pixels[0].y;
+
+                context?.beginPath();
+                context?.moveTo(x, y);
+                for(const {x, y} of this.pixels) {
+                    context?.lineTo(x, y);
+                }
+                context?.stroke();
+            }
+        //}
+    }
+
+}
 //INNER HTML SETUP
 const APP_NAME = "Drawing Game!";
 
@@ -8,9 +45,9 @@ const header = document.createElement("h1");
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
 //any[][] from GPT https://chatgpt.com/share/670f30d4-c6fc-8007-829e-26766989f016
-let lines: any[][] = [];
-let redos: any[][] = [];
-let current_line: any[];
+const lines: Drawable[] = [];
+const redos: Drawable[] = [];
+let current_line: Line;
 canvas.height = 256;
 canvas.width = 256;
 const pencil = canvas.getContext("2d");
@@ -32,10 +69,11 @@ canvas.addEventListener("mousedown", (event) => {
     cursor.x = event.offsetX;
     cursor.y = event.offsetY;
 
-    current_line = [];
+    current_line = new Line();
     lines.push(current_line);
     redos.splice(0, redos.length);
-    current_line.push({x: cursor.x, y: cursor.y});
+    const p: Pixel = {x: cursor.x, y: cursor.y};
+    current_line.addPixel(p);
     
     canvas.dispatchEvent(draw_event);
 });
@@ -44,14 +82,15 @@ canvas.addEventListener("mousemove", (event) => {
     if(cursor.active) {
         cursor.x = event.offsetX;
         cursor.y = event.offsetY;
-        current_line.push({x: cursor.x, y: cursor.y});
+        const p: Pixel = {x: cursor.x, y: cursor.y};
+        current_line.addPixel(p);
         canvas.dispatchEvent(draw_event);
     }
 });
 
-canvas.addEventListener("mouseup", (event) => {
+canvas.addEventListener("mouseup", () => {
     cursor.active = false;
-    current_line = [];
+    current_line = new Line();
     canvas.dispatchEvent(draw_event);
   });
 
@@ -60,20 +99,12 @@ canvas.addEventListener("mouseup", (event) => {
 
 //draw event, adapted from glitch paint1
 canvas.addEventListener(
-    "draw", (e) => {
+    "draw", () => {
         canvas.dispatchEvent(clear_event);
-        for(const line of lines){
-            if(line.length > 1) {
-                const x = line[0].x;
-                const y = line[0].y;
+        //console.log(lines.length)
+        for(const drawing of lines){
 
-                pencil?.beginPath();
-                pencil?.moveTo(x, y);
-                for(const {x, y} of line) {
-                    pencil?.lineTo(x, y);
-                }
-                pencil?.stroke();
-            }
+            drawing.display(pencil!);
         }
         
     }, false,
@@ -81,23 +112,28 @@ canvas.addEventListener(
 
 //clear event
 canvas.addEventListener(
-    "clear", (e) => {
-        console.log("clear event");
+    "clear", () => {
+        //console.log("clear event");
         if(pencil) pencil.fillStyle = "white";
         pencil?.fillRect(0, 0, 256, 256);
         if(pencil) pencil.fillStyle = "black"; 
     }, false,
 );
 
+
+//clear button
 const clear_button = document.createElement("button");
 clear_button.innerHTML = "clear";
 document.body.append(clear_button);
 clear_button.addEventListener("click", () => {
     canvas.dispatchEvent(clear_event);
-    current_line = [];
+    current_line = new Line();
     lines.splice(0, lines.length);
+    redos.splice(0, redos.length);
 });
 
+
+//undo button
 const undo_button = document.createElement("button");
 undo_button.innerHTML = "undo";
 document.body.append(undo_button);
@@ -109,11 +145,13 @@ undo_button.addEventListener("click", () => {
     }
 });
 
+
+//redo button
 const redo_button = document.createElement("button");
 redo_button.innerHTML = "redo";
 document.body.append(redo_button);
 redo_button.addEventListener("click", () => {
-    if(lines.length > 0) {
+    if(redos.length > 0) {
         lines.push(redos[redos.length - 1]);
         redos.pop();
         canvas.dispatchEvent(draw_event);
