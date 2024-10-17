@@ -17,63 +17,62 @@ interface Pixel {
   }
 
 interface Drawable {
+    type: boolean,
+    addPixel(pixel: Pixel): void,
     display(context: CanvasRenderingContext2D): void;
 }
+interface CursorCommand {
+    x: number,
+    y: number,
+    type: boolean,
+    execute(context: CanvasRenderingContext2D): void
+}
 
-//LINE CLASS=========================================================================================
-class Line implements Drawable {
-    private pixels: Pixel[];
-    private type: boolean;//0 is thin, 1 is thick
 
-    constructor(type: boolean) {
-        this.pixels = [];
-        this.type = type;
-    }
-
-    addPixel(pixel: Pixel) {
-        this.pixels.push(pixel);
-    }
-
-    display(context: CanvasRenderingContext2D): void {
-            if(this.pixels.length > 1) {
-                const x = this.pixels[0].x;
-                const y = this.pixels[0].y;
+//LINE CREATE FUNCTION================================================================================
+function createLine(type: boolean): Drawable {
+    const pixels: Pixel[] = [];
+    return {
+        type, 
+        addPixel(pixel: Pixel): void {
+            pixels.push(pixel);
+        },
+        display(context: CanvasRenderingContext2D): void {
+            if(pixels.length > 1) {
+                const x = pixels[0].x;
+                const y = pixels[0].y;
                 if(this.type) context.lineWidth = 10;
                 else context.lineWidth = 1;
                 context?.beginPath();
                 context?.moveTo(x, y);
-                for(const {x, y} of this.pixels) {
+                for(const {x, y} of pixels) {
                     context?.lineTo(x, y);
                 }
                 context?.stroke();
             }
-    }
-
-}
-
-//CURSORCOMMAND CLASS================================================================================
-class CursorCommand {
-    private x: number;
-    private y: number;
-    private type: boolean;
-    constructor(x: number, y: number, type: boolean) {
-        this.x = x;
-        this.y = y;
-        this.type = type;
-    }
-    execute(context: CanvasRenderingContext2D): void {
-        if(this.type) {
-            context.font = "32px monospace";
-            context.fillText("o", this.x - 8, this.y + 8);
         }
-        else {
-            context.font = "8px monospace";
-            context.fillText("o", this.x - 4, this.y);
-        }
-        
     }
 }
 
+//CURSOR COMMAND CREATE FUNCTION=====================================================================
+function createCursorCommand(x: number, y: number, type: boolean) {
+    return {
+        x,
+        y,
+        type,
+        execute(context: CanvasRenderingContext2D): void {
+            if(type) {
+                context.font = "32px monospace";
+                context.fillText("o", x - 8, y + 8);
+            }
+            else {
+                context.font = "8px monospace";
+                context.fillText("o", x - 4, y);
+            }
+            
+        }
+    }
+}
 
 //INNER HTML SETUP===================================================================================
 const APP_NAME = "Drawing Game!";
@@ -83,7 +82,7 @@ const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const lines: Drawable[] = [];
 const redos: Drawable[] = [];
 let current_line_type: boolean = false;//thin
-let current_line: Line;
+let current_line: Drawable;
 canvas.height = 256;
 canvas.width = 256;
 const pencil = canvas.getContext("2d");
@@ -108,7 +107,7 @@ canvas.addEventListener("mouseout", () => {
 });
 
 canvas.addEventListener("mouseenter", (e) => {
-    cursorCommand = new CursorCommand(e.offsetX, e.offsetY, current_line_type);
+    cursorCommand = createCursorCommand(e.offsetX, e.offsetY, current_line_type);
     notify("tool-moved");
 });
 
@@ -121,7 +120,8 @@ canvas.addEventListener("mousedown", (event) => {
     cursor.x = event.offsetX;
     cursor.y = event.offsetY;
 
-    current_line = new Line(current_line_type);
+    current_line = createLine(current_line_type);
+
     lines.push(current_line);
     redos.splice(0, redos.length);
     const p: Pixel = {x: cursor.x, y: cursor.y};
@@ -141,7 +141,7 @@ canvas.addEventListener("mousemove", (event) => {
         canvas.dispatchEvent(draw_event);
     }
     else {
-        cursorCommand = new CursorCommand(event.offsetX, event.offsetY, current_line_type);
+        cursorCommand = createCursorCommand(event.offsetX, event.offsetY, current_line_type);
         notify("tool-moved");
     }
 });
@@ -150,16 +150,14 @@ canvas.addEventListener("mousemove", (event) => {
 //mouse release event
 canvas.addEventListener("mouseup", () => {
     cursor.active = false;
-    current_line = new Line(current_line_type);
+    current_line = createLine(current_line_type);
     canvas.dispatchEvent(draw_event);
 });
-
 
 //draw event, adapted from glitch paint1
 canvas.addEventListener(
     "draw", () => {
         canvas.dispatchEvent(clear_event);
-        //console.log(lines.length)
         for(const drawing of lines){
 
             drawing.display(pencil!);
@@ -172,14 +170,11 @@ canvas.addEventListener(
 //clear event
 canvas.addEventListener(
     "clear", () => {
-        //console.log("clear event");
         if(pencil) pencil.fillStyle = "white";
         pencil?.fillRect(0, 0, 256, 256);
         if(pencil) pencil.fillStyle = "black"; 
     }, false,
 );
-
-
 
 //BUTTONS============================================================================================
 //clear button
@@ -188,7 +183,7 @@ clear_button.innerHTML = "clear";
 document.body.append(clear_button);
 clear_button.addEventListener("click", () => {
     canvas.dispatchEvent(clear_event);
-    current_line = new Line(current_line_type);
+    current_line = createLine(current_line_type);
     lines.splice(0, lines.length);
     redos.splice(0, redos.length);
 });
@@ -244,3 +239,15 @@ function tick() {
     requestAnimationFrame(tick);
 }
 tick();
+
+/**STEP 8 PSEUDOCODE {
+    context.fillText(text, x, y);
+    context.translate(x, y); //changes "origin point" on canvas so next drawing that calls 0,0 is actually at the new spot
+    context.rotate((45* Math.PI) / 180); //degree rotation format, same as translate
+    context.resetTransform();
+
+    3 different emojis https://emojipedia.org/cookie
+    fire tool-moved when you click the different brush types
+    preview for sticker placement
+    drag and click repositions instead of painting over
+}*/
