@@ -17,20 +17,20 @@ interface Pixel {
   }
 
 interface Drawable {
-    type: boolean,
+    type: string,
     addPixel(pixel: Pixel): void,
     display(context: CanvasRenderingContext2D): void;
 }
 interface CursorCommand {
     x: number,
     y: number,
-    type: boolean,
+    type: string,
     execute(context: CanvasRenderingContext2D): void
 }
 
 
 //LINE CREATE FUNCTION================================================================================
-function createLine(type: boolean): Drawable {
+function createLine(type: string): Drawable {
     const pixels: Pixel[] = [];
     return {
         type, 
@@ -41,8 +41,8 @@ function createLine(type: boolean): Drawable {
             if(pixels.length > 1) {
                 const x = pixels[0].x;
                 const y = pixels[0].y;
-                if(this.type) context.lineWidth = 10;
-                else context.lineWidth = 1;
+                if(type == "thick") context.lineWidth = 10;
+                else if(type == "thin")context.lineWidth = 1;
                 context?.beginPath();
                 context?.moveTo(x, y);
                 for(const {x, y} of pixels) {
@@ -50,25 +50,43 @@ function createLine(type: boolean): Drawable {
                 }
                 context?.stroke();
             }
+            else if(type != "thick" && type != "thin") {
+                const x = pixels[0].x;
+                const y = pixels[0].y;
+                context.fillText(type, x, y);
+            }
         }
     }
 }
 
 //CURSOR COMMAND CREATE FUNCTION=====================================================================
-function createCursorCommand(x: number, y: number, type: boolean) {
+function createCursorCommand(x: number, y: number, type: string) {
     return {
         x,
         y,
         type,
         execute(context: CanvasRenderingContext2D): void {
-            if(type) {
+            if(type == "thick") {
                 context.font = "32px monospace";
                 context.fillText("o", x - 8, y + 8);
             }
-            else {
+            else if(type == "thin"){
                 context.font = "8px monospace";
                 context.fillText("o", x - 4, y);
             }
+            else if(type == "💖"){
+                context.font = "32px monospace";
+                context.fillText("💖", x - 18, y + 10);
+            }
+            else if(type == "🍒"){
+                context.font = "32px monospace";
+                context.fillText("🍒", x - 18, y + 10);
+            }
+            else if(type == "😀"){
+                context.font = "32px monospace";
+                context.fillText("😀", x - 18, y + 10);
+            }
+            
             
         }
     }
@@ -81,11 +99,12 @@ const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 //any[][] from GPT https://chatgpt.com/share/670f30d4-c6fc-8007-829e-26766989f016 (redundant now since style checker didn't like any[][])
 const lines: Drawable[] = [];
 const redos: Drawable[] = [];
-let current_line_type: boolean = false;//thin
+let current_line_type: string = "thin";//thin
 let current_line: Drawable;
 canvas.height = 256;
 canvas.width = 256;
 const pencil = canvas.getContext("2d");
+
 //initial clear
 if(pencil) pencil.fillStyle = "white";
 pencil?.fillRect(0, 0, 256, 256);
@@ -124,7 +143,9 @@ canvas.addEventListener("mousedown", (event) => {
 
     lines.push(current_line);
     redos.splice(0, redos.length);
-    const p: Pixel = {x: cursor.x, y: cursor.y};
+    let p: Pixel;
+    if(current_line.type == "thin" || current_line.type == "thick") p = {x: cursor.x, y: cursor.y};
+    else p = {x: cursor.x - 18, y: cursor.y + 10};
     current_line.addPixel(p);
     
     canvas.dispatchEvent(draw_event);
@@ -133,10 +154,21 @@ canvas.addEventListener("mousedown", (event) => {
 
 //mouse move event
 canvas.addEventListener("mousemove", (event) => {
-    if(cursor.active) {
+    if(cursor.active && (current_line.type == "thin" || current_line.type == "thick")) {
         cursor.x = event.offsetX;
         cursor.y = event.offsetY;
         const p: Pixel = {x: cursor.x, y: cursor.y};
+        current_line.addPixel(p);
+        canvas.dispatchEvent(draw_event);
+    }
+    else if(cursor.active) {
+        cursor.x = event.offsetX;
+        cursor.y = event.offsetY;
+        current_line = createLine(current_line_type);
+        lines.pop();
+        lines.push(current_line);
+        redos.splice(0, redos.length);
+        const p: Pixel = {x: cursor.x-18, y: cursor.y+10};
         current_line.addPixel(p);
         canvas.dispatchEvent(draw_event);
     }
@@ -220,7 +252,7 @@ const thick_button = document.createElement("button");
 thick_button.innerHTML = "thick";
 document.body.append(thick_button);
 thick_button.addEventListener("click", () => {
-    current_line_type = true;
+    current_line_type = "thick";
 });
 
 //thin button
@@ -228,9 +260,35 @@ const thin_button = document.createElement("button");
 thin_button.innerHTML = "thin";
 document.body.append(thin_button);
 thin_button.addEventListener("click", () => {
-    current_line_type = false;
+    current_line_type = "thin";
 });
 
+//Sticker 1 button
+const sticker1_button = document.createElement("button");
+sticker1_button.innerHTML = "💖";
+document.body.append(sticker1_button);
+sticker1_button.addEventListener("click", () => {
+    current_line_type = "💖";
+    notify("tool-moved");
+});
+
+//Sticker 2 button
+const sticker2_button = document.createElement("button");
+sticker2_button.innerHTML = "🍒";
+document.body.append(sticker2_button);
+sticker2_button.addEventListener("click", () => {
+    current_line_type = "🍒";
+    notify("tool-moved");
+});
+
+//Sticker 3 button
+const sticker3_button = document.createElement("button");
+sticker3_button.innerHTML = "😀";
+document.body.append(sticker3_button);
+sticker3_button.addEventListener("click", () => {
+    current_line_type = "😀";
+    notify("tool-moved");
+});
 
 bus.addEventListener("tool-moved", redraw);
 
