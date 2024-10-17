@@ -104,12 +104,12 @@ function redraw() {
 
 canvas.addEventListener("mouseout", () => {
     cursorCommand = null;
-    notify("cursor-changed");
+    notify("tool-moved");
 });
 
 canvas.addEventListener("mouseenter", (e) => {
     cursorCommand = new CursorCommand(e.offsetX, e.offsetY, current_line_type);
-    notify("cursor-changed");
+    notify("tool-moved");
 });
 
 
@@ -142,7 +142,7 @@ canvas.addEventListener("mousemove", (event) => {
     }
     else {
         cursorCommand = new CursorCommand(event.offsetX, event.offsetY, current_line_type);
-        notify("cursor-changed");
+        notify("tool-moved");
     }
 });
 
@@ -237,7 +237,7 @@ thin_button.addEventListener("click", () => {
 });
 
 
-bus.addEventListener("cursor-changed", redraw);
+bus.addEventListener("tool-moved", redraw);
 
 function tick() {
     redraw();
