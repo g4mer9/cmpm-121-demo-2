@@ -1,5 +1,14 @@
 import "./style.css";
 
+//EVENT BUS SETUP====================================================================================
+//used example for this and most of step 7 https://quant-paint.glitch.me/paint2.html
+let cursorCommand : CursorCommand | null = null;
+const bus = new EventTarget();
+function notify(name: string) {
+    bus.dispatchEvent(new Event(name));
+}
+const draw_event = new Event("draw");
+const clear_event = new Event("clear");
 
 //INTERFACES=========================================================================================
 interface Pixel {
@@ -10,7 +19,6 @@ interface Pixel {
 interface Drawable {
     display(context: CanvasRenderingContext2D): void;
 }
-
 
 //LINE CLASS=========================================================================================
 class Line implements Drawable {
@@ -43,12 +51,35 @@ class Line implements Drawable {
 
 }
 
+//CURSORCOMMAND CLASS================================================================================
+class CursorCommand {
+    private x: number;
+    private y: number;
+    private type: boolean;
+    constructor(x: number, y: number, type: boolean) {
+        this.x = x;
+        this.y = y;
+        this.type = type;
+    }
+    execute(context: CanvasRenderingContext2D): void {
+        if(this.type) {
+            context.font = "32px monospace";
+            context.fillText("o", this.x - 8, this.y + 8);
+        }
+        else {
+            context.font = "8px monospace";
+            context.fillText("o", this.x - 4, this.y);
+        }
+        
+    }
+}
+
 
 //INNER HTML SETUP===================================================================================
 const APP_NAME = "Drawing Game!";
 const header = document.createElement("h1");
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-//any[][] from GPT https://chatgpt.com/share/670f30d4-c6fc-8007-829e-26766989f016
+//any[][] from GPT https://chatgpt.com/share/670f30d4-c6fc-8007-829e-26766989f016 (redundant now since style checker didn't like any[][])
 const lines: Drawable[] = [];
 const redos: Drawable[] = [];
 let current_line_type: boolean = false;//thin
@@ -63,13 +94,27 @@ if(pencil) pencil.fillStyle = "black";
 document.title = APP_NAME;
 header.innerHTML = APP_NAME;
 canvas.parentNode?.insertBefore(header, canvas);
-const draw_event = new Event("draw");
-const clear_event = new Event("clear");
+function redraw() {
+    canvas.dispatchEvent(draw_event);
+}
+
 
 
 //EVENT DEFINITIONS==================================================================================
 
+canvas.addEventListener("mouseout", () => {
+    cursorCommand = null;
+    notify("cursor-changed");
+});
+
+canvas.addEventListener("mouseenter", (e) => {
+    cursorCommand = new CursorCommand(e.offsetX, e.offsetY, current_line_type);
+    notify("cursor-changed");
+});
+
+
 //from the glitch example https://quant-paint.glitch.me/paint0.html {
+//mouse click event
 const cursor = {active: false, x: 0, y: 0};
 canvas.addEventListener("mousedown", (event) => {
     cursor.active = true;
@@ -85,6 +130,8 @@ canvas.addEventListener("mousedown", (event) => {
     canvas.dispatchEvent(draw_event);
 });
 
+
+//mouse move event
 canvas.addEventListener("mousemove", (event) => {
     if(cursor.active) {
         cursor.x = event.offsetX;
@@ -93,8 +140,14 @@ canvas.addEventListener("mousemove", (event) => {
         current_line.addPixel(p);
         canvas.dispatchEvent(draw_event);
     }
+    else {
+        cursorCommand = new CursorCommand(event.offsetX, event.offsetY, current_line_type);
+        notify("cursor-changed");
+    }
 });
 
+
+//mouse release event
 canvas.addEventListener("mouseup", () => {
     cursor.active = false;
     current_line = new Line(current_line_type);
@@ -111,6 +164,7 @@ canvas.addEventListener(
 
             drawing.display(pencil!);
         }
+        if(cursorCommand && pencil) cursorCommand.execute(pencil);
         
     }, false,
 );
@@ -182,3 +236,11 @@ thin_button.addEventListener("click", () => {
     current_line_type = false;
 });
 
+
+bus.addEventListener("cursor-changed", redraw);
+
+function tick() {
+    redraw();
+    requestAnimationFrame(tick);
+}
+tick();
