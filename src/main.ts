@@ -9,6 +9,7 @@ function notify(name: string) {
 }
 const draw_event = new Event("draw");
 const clear_event = new Event("clear");
+const list_of_buttons: string[] = ["thick", "thin", "💖", "🍒", "😀"];
 
 //INTERFACES=========================================================================================
 interface Pixel {
@@ -74,20 +75,10 @@ function createCursorCommand(x: number, y: number, type: string) {
                 context.font = "8px monospace";
                 context.fillText("o", x - 4, y);
             }
-            else if(type == "💖"){
+            else {
                 context.font = "32px monospace";
-                context.fillText("💖", x - 18, y + 10);
+                context.fillText(type, x - 18, y + 10);
             }
-            else if(type == "🍒"){
-                context.font = "32px monospace";
-                context.fillText("🍒", x - 18, y + 10);
-            }
-            else if(type == "😀"){
-                context.font = "32px monospace";
-                context.fillText("😀", x - 18, y + 10);
-            }
-            
-            
         }
     }
 }
@@ -247,49 +238,27 @@ redo_button.addEventListener("click", () => {
 });
 
 
-//Thick button
-const thick_button = document.createElement("button");
-thick_button.innerHTML = "thick";
-document.body.append(thick_button);
-thick_button.addEventListener("click", () => {
-    current_line_type = "thick";
-});
+for(const button of list_of_buttons) {
+    const new_button = document.createElement("button");
+    new_button.innerHTML = button;
+    document.body.append(new_button);
+    new_button.addEventListener("click", () => {
+        current_line_type = button;
+        notify("tool-moved");
+    });
+ }
 
-//thin button
-const thin_button = document.createElement("button");
-thin_button.innerHTML = "thin";
-document.body.append(thin_button);
-thin_button.addEventListener("click", () => {
-    current_line_type = "thin";
-});
+ //prompt for copilot autofill: i want to create a custom button that changes current_line_type to a user inputted string
+    const custom_button = document.createElement("button");
+    custom_button.innerHTML = "custom";
+    document.body.append(custom_button);
+    custom_button.addEventListener("click", () => {
+        const custom_input = prompt("Enter a custom string:", "text or emoji");
+        if(custom_input) current_line_type = custom_input;
+        notify("tool-moved");
+    });
 
-//Sticker 1 button
-const sticker1_button = document.createElement("button");
-sticker1_button.innerHTML = "💖";
-document.body.append(sticker1_button);
-sticker1_button.addEventListener("click", () => {
-    current_line_type = "💖";
-    notify("tool-moved");
-});
-
-//Sticker 2 button
-const sticker2_button = document.createElement("button");
-sticker2_button.innerHTML = "🍒";
-document.body.append(sticker2_button);
-sticker2_button.addEventListener("click", () => {
-    current_line_type = "🍒";
-    notify("tool-moved");
-});
-
-//Sticker 3 button
-const sticker3_button = document.createElement("button");
-sticker3_button.innerHTML = "😀";
-document.body.append(sticker3_button);
-sticker3_button.addEventListener("click", () => {
-    current_line_type = "😀";
-    notify("tool-moved");
-});
-
+//EVENT LISTENERS====================================================================================
 bus.addEventListener("tool-moved", redraw);
 
 function tick() {
@@ -297,15 +266,3 @@ function tick() {
     requestAnimationFrame(tick);
 }
 tick();
-
-/**STEP 8 PSEUDOCODE {
-    context.fillText(text, x, y);
-    context.translate(x, y); //changes "origin point" on canvas so next drawing that calls 0,0 is actually at the new spot
-    context.rotate((45* Math.PI) / 180); //degree rotation format, same as translate
-    context.resetTransform();
-
-    3 different emojis https://emojipedia.org/cookie
-    fire tool-moved when you click the different brush types
-    preview for sticker placement
-    drag and click repositions instead of painting over
-}*/
