@@ -10,6 +10,10 @@ function notify(name: string) {
 const draw_event = new Event("draw");
 const clear_event = new Event("clear");
 const list_of_buttons: string[] = ["thick", "thin", "💖", "🍒", "😀"];
+const THICK_FONT: string = "22px monospace";
+const THIN_FONT: string = "12px monospace";
+const THICK_LINE_WIDTH: number = 7;
+const THIN_LINE_WIDTH: number = 3;
 
 //INTERFACES=========================================================================================
 interface Pixel {
@@ -42,8 +46,8 @@ function createLine(type: string): Drawable {
             if(pixels.length > 1) {
                 const x = pixels[0].x;
                 const y = pixels[0].y;
-                if(type == "thick") context.lineWidth = 10;
-                else if(type == "thin")context.lineWidth = 1;
+                if(type == "thick") context.lineWidth = THICK_LINE_WIDTH;
+                else if(type == "thin")context.lineWidth = THIN_LINE_WIDTH;
                 context?.beginPath();
                 context?.moveTo(x, y);
                 for(const {x, y} of pixels) {
@@ -68,15 +72,15 @@ function createCursorCommand(x: number, y: number, type: string) {
         type,
         execute(context: CanvasRenderingContext2D): void {
             if(type == "thick") {
-                context.font = "32px monospace";
+                context.font = THICK_FONT
                 context.fillText("o", x - 8, y + 8);
             }
             else if(type == "thin"){
-                context.font = "8px monospace";
+                context.font = THIN_FONT
                 context.fillText("o", x - 4, y);
             }
             else {
-                context.font = "32px monospace";
+                context.font = THICK_FONT
                 context.fillText(type, x - 18, y + 10);
             }
         }
@@ -270,8 +274,8 @@ download_button.addEventListener("click", () => {
     new_pencil?.fillRect(0, 0, 1024, 1024);
     if(new_pencil) new_pencil.fillStyle = "black";
     for(const drawing of lines){
-        if(drawing.type == "thin" && new_pencil) new_pencil.font = "8px monospace";
-        else if(new_pencil) new_pencil.font = "32px monospace";
+        if(drawing.type == "thin" && new_pencil) new_pencil.font = THIN_FONT
+        else if(new_pencil) new_pencil.font = THICK_FONT
         drawing.display(new_pencil!);
     }
     const url = new_canvas.toDataURL();
