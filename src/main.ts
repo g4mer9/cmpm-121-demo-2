@@ -1,4 +1,6 @@
 import "./style.css";
+/**copilot prompt: Each time a tool button (a marker or sticker button) is pressed, randomize the color/rotation that will be used next time the tool is used. The tool preview display should help them decide if they want to keep clicking to get a different random variation.
+ */
 
 //EVENT BUS SETUP====================================================================================
 //used example for this and most of step 7 https://quant-paint.glitch.me/paint2.html
@@ -10,6 +12,8 @@ function notify(name: string) {
 const draw_event = new Event("draw");
 const clear_event = new Event("clear");
 const list_of_buttons: string[] = ["thick", "thin", "💖", "🍒", "😀"];
+const list_of_colors: string[] = ["red", "blue", "green", "purple", "orange", "black", "brown", "pink", "yellow", "gray"];
+let current_color: string = "black";
 const THICK_FONT: string = "22px monospace";
 const THIN_FONT: string = "12px monospace";
 const THICK_LINE_WIDTH: number = 7;
@@ -23,6 +27,7 @@ interface Pixel {
 
 interface Drawable {
     type: string,
+    color: string,
     addPixel(pixel: Pixel): void,
     display(context: CanvasRenderingContext2D): void;
 }
@@ -35,14 +40,17 @@ interface CursorCommand {
 
 
 //LINE CREATE FUNCTION================================================================================
-function createLine(type: string): Drawable {
+function createLine(type: string, color: string): Drawable {
     const pixels: Pixel[] = [];
     return {
         type, 
+        color,
         addPixel(pixel: Pixel): void {
             pixels.push(pixel);
         },
         display(context: CanvasRenderingContext2D): void {
+            context.fillStyle = this.color;
+            context.strokeStyle = this.color;
             if(pixels.length > 1) {
                 const x = pixels[0].x;
                 const y = pixels[0].y;
@@ -100,10 +108,12 @@ canvas.height = 256;
 canvas.width = 256;
 const pencil = canvas.getContext("2d");
 
+
 //initial clear
 if(pencil) pencil.fillStyle = "white";
 pencil?.fillRect(0, 0, 256, 256);
 if(pencil) pencil.fillStyle = "black";
+pencil?.translate(128, 128);
 document.title = APP_NAME;
 header.innerHTML = APP_NAME;
 canvas.parentNode?.insertBefore(header, canvas);
@@ -134,7 +144,7 @@ canvas.addEventListener("mousedown", (event) => {
     cursor.x = event.offsetX;
     cursor.y = event.offsetY;
 
-    current_line = createLine(current_line_type);
+    current_line = createLine(current_line_type, current_color);
 
     lines.push(current_line);
     redos.splice(0, redos.length);
@@ -159,7 +169,7 @@ canvas.addEventListener("mousemove", (event) => {
     else if(cursor.active) {
         cursor.x = event.offsetX;
         cursor.y = event.offsetY;
-        current_line = createLine(current_line_type);
+        current_line = createLine(current_line_type, current_color);
         lines.pop();
         lines.push(current_line);
         redos.splice(0, redos.length);
@@ -177,7 +187,7 @@ canvas.addEventListener("mousemove", (event) => {
 //mouse release event
 canvas.addEventListener("mouseup", () => {
     cursor.active = false;
-    current_line = createLine(current_line_type);
+    current_line = createLine(current_line_type, current_color);
     canvas.dispatchEvent(draw_event);
 });
 
@@ -210,7 +220,7 @@ clear_button.innerHTML = "clear";
 document.body.append(clear_button);
 clear_button.addEventListener("click", () => {
     canvas.dispatchEvent(clear_event);
-    current_line = createLine(current_line_type);
+    current_line = createLine(current_line_type, current_color);
     lines.splice(0, lines.length);
     redos.splice(0, redos.length);
 });
@@ -248,6 +258,8 @@ for(const button of list_of_buttons) {
     document.body.append(new_button);
     new_button.addEventListener("click", () => {
         current_line_type = button;
+        current_color = list_of_colors[Math.floor(Math.random() * list_of_colors.length)];
+        pencil?.rotate(Math.random() * 2 * Math.PI);
         notify("tool-moved");
     });
  }
