@@ -248,15 +248,38 @@ for(const button of list_of_buttons) {
     });
  }
 
- //prompt for copilot autofill: i want to create a custom button that changes current_line_type to a user inputted string
-    const custom_button = document.createElement("button");
-    custom_button.innerHTML = "custom";
-    document.body.append(custom_button);
-    custom_button.addEventListener("click", () => {
-        const custom_input = prompt("Enter a custom string:", "text or emoji");
-        if(custom_input) current_line_type = custom_input;
-        notify("tool-moved");
-    });
+const custom_button = document.createElement("button");
+custom_button.innerHTML = "custom";
+document.body.append(custom_button);
+custom_button.addEventListener("click", () => {
+    const custom_input = prompt("Enter a custom string:", "text or emoji");
+    if(custom_input) current_line_type = custom_input;
+    notify("tool-moved");
+});
+
+const download_button = document.createElement("button");
+download_button.innerHTML = "download";
+document.body.append(download_button);
+download_button.addEventListener("click", () => {
+    const new_canvas = document.createElement("canvas");
+    new_canvas.height = 1024;
+    new_canvas.width = 1024;
+    const new_pencil = new_canvas.getContext("2d");
+    if(new_pencil) new_pencil.scale(4, 4);
+    if(new_pencil) new_pencil.fillStyle = "white";
+    new_pencil?.fillRect(0, 0, 1024, 1024);
+    if(new_pencil) new_pencil.fillStyle = "black";
+    for(const drawing of lines){
+        if(drawing.type == "thin" && new_pencil) new_pencil.font = "8px monospace";
+        else if(new_pencil) new_pencil.font = "32px monospace";
+        drawing.display(new_pencil!);
+    }
+    const url = new_canvas.toDataURL();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "drawing.png";
+    a.click();
+});
 
 //EVENT LISTENERS====================================================================================
 bus.addEventListener("tool-moved", redraw);
