@@ -97,10 +97,17 @@ function createCursorCommand(x: number, y: number, type: string) {
 
 //INNER HTML SETUP===================================================================================
 const APP_NAME = "Drawing Game!";
-const header = document.createElement("h1");
-const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-const format = document.createElement("div");
 const app = document.querySelector<HTMLDivElement>("#app")!;
+document.title = APP_NAME;
+
+const header = document.createElement("h1")!;
+header.textContent = APP_NAME;
+
+const canvas = document.getElementById("canvas")! as HTMLCanvasElement;
+canvas.height = 256;
+canvas.width = 256;
+
+const format = document.createElement("div");
 format.id = "canvas-format";
 format.appendChild(header);
 format.appendChild(canvas);
@@ -110,18 +117,13 @@ const lines: Drawable[] = [];
 const redos: Drawable[] = [];
 let current_line_type: string = "thin";//thin
 let current_line: Drawable;
-canvas.height = 256;
-canvas.width = 256;
 const pencil = canvas.getContext("2d");
-
 
 //initial clear
 if(pencil) pencil.fillStyle = "white";
 pencil?.fillRect(0, 0, 256, 256);
 if(pencil) pencil.fillStyle = "black";
 pencil?.translate(128, 128);
-document.title = APP_NAME;
-header.textContent = APP_NAME;
 canvas.parentNode?.insertBefore(header, canvas);
 function redraw() {
     canvas.dispatchEvent(draw_event);
