@@ -16,6 +16,14 @@
 #canvas {
   border: 5px solid black;
   border-radius: 30px;
+  margin-right: 20px;
+}
+
+#canvas-format {
+  display: flex;
+  flex-direction: column; 
+  align-items: center;
+  margin-top: 30px;
 }
 
 a {
@@ -45,6 +53,9 @@ h1 {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  align-items: center; 
+  justify-content: center; 
+  display: flex;
 }
 
 .logo {
