@@ -226,19 +226,22 @@ canvas.addEventListener(
 //clear button
 const clear_button = document.createElement("button");
 clear_button.innerHTML = "clear";
-document.body.append(clear_button);
+clear_button.id = "button-format";
+format.append(clear_button);
 clear_button.addEventListener("click", () => {
     canvas.dispatchEvent(clear_event);
     current_line = createLine(current_line_type, current_color);
     lines.splice(0, lines.length);
     redos.splice(0, redos.length);
+    
 });
 
 
 //undo button
 const undo_button = document.createElement("button");
 undo_button.innerHTML = "undo";
-document.body.append(undo_button);
+undo_button.id = "button-format";
+format.append(undo_button);
 undo_button.addEventListener("click", () => {
     if(lines.length > 0) {
         redos.push(lines[lines.length - 1]);
@@ -251,7 +254,8 @@ undo_button.addEventListener("click", () => {
 //redo button
 const redo_button = document.createElement("button");
 redo_button.innerHTML = "redo";
-document.body.append(redo_button);
+redo_button.id = "button-format";
+format.append(redo_button);
 redo_button.addEventListener("click", () => {
     if(redos.length > 0) {
         lines.push(redos[redos.length - 1]);
@@ -264,7 +268,7 @@ redo_button.addEventListener("click", () => {
 for(const button of list_of_buttons) {
     const new_button = document.createElement("button");
     new_button.innerHTML = button;
-    document.body.append(new_button);
+    format.append(new_button);
     new_button.addEventListener("click", () => {
         current_line_type = button;
         current_color = list_of_colors[Math.floor(Math.random() * list_of_colors.length)];

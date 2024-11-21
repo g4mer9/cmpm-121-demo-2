@@ -78,6 +78,13 @@ h1 {
   color: #888;
 }
 
+#button-format {
+  display:flex;   /* Display buttons in a single line */
+  flex-direction: row;  /* Display buttons horizontally */
+  align-items:center; /* Align buttons to the left inside the container */
+  margin-top: 20px; /* Adjust the value as needed */
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -85,12 +92,12 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #171f69;
   cursor: pointer;
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: #050818;
 }
 button:focus,
 button:focus-visible {
