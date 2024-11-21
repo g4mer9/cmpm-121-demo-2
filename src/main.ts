@@ -268,7 +268,7 @@ redo_button.addEventListener("click", () => {
 for(const button of list_of_buttons) {
     const new_button = document.createElement("button");
     new_button.innerHTML = button;
-    format.append(new_button);
+    document.body.append(new_button);
     new_button.addEventListener("click", () => {
         current_line_type = button;
         current_color = list_of_colors[Math.floor(Math.random() * list_of_colors.length)];
