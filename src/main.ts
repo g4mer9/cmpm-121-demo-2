@@ -107,7 +107,7 @@ const canvas = document.getElementById("canvas")! as HTMLCanvasElement;
 canvas.height = 256;
 canvas.width = 256;
 
-const format = document.createElement("div");
+const format = document.createElement("div")!;
 format.id = "canvas-format";
 format.appendChild(header);
 format.appendChild(canvas);
