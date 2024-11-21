@@ -100,18 +100,19 @@ const APP_NAME = "Drawing Game!";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 document.title = APP_NAME;
 
-const header = document.createElement("h1")!;
+const header = document.createElement("h1");
 header.textContent = APP_NAME;
 
-const canvas = document.getElementById("canvas")! as HTMLCanvasElement;
+const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 canvas.height = 256;
 canvas.width = 256;
 
-const format = document.createElement("div")!;
+const format = document.createElement("div");
 format.id = "canvas-format";
 format.appendChild(header);
 format.appendChild(canvas);
 app.appendChild(format);
+
 //any[][] from GPT https://chatgpt.com/share/670f30d4-c6fc-8007-829e-26766989f016 (redundant now since style checker didn't like any[][])
 const lines: Drawable[] = [];
 const redos: Drawable[] = [];
