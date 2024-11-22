@@ -124,7 +124,7 @@ const pencil = canvas.getContext("2d");
 if(pencil) pencil.fillStyle = "white";
 pencil?.fillRect(0, 0, 256, 256);
 if(pencil) pencil.fillStyle = "black";
-pencil?.translate(128, 128);
+//pencil?.translate(128, 128);
 canvas.parentNode?.insertBefore(header, canvas);
 function redraw() {
     canvas.dispatchEvent(draw_event);
@@ -272,7 +272,7 @@ for(const button of list_of_buttons) {
     new_button.addEventListener("click", () => {
         current_line_type = button;
         current_color = list_of_colors[Math.floor(Math.random() * list_of_colors.length)];
-        pencil?.rotate(Math.random() * 2 * Math.PI);
+        //pencil?.rotate(Math.random() * 2 * Math.PI);
         notify("tool-moved");
     });
  }
